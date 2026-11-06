@@ -1,4 +1,4 @@
-# CLDV6212-Final-POE
+ # CLDV6212-Final-POE
 
 Just like in PROG 2B you will need to make an ASP.Net Core Web API with Swagger for API documentation. However, for cloud you will be required to create endpoints for user registration and login enhanced with encryption and JWT authentication and RBAC. Additionally you will need to deploy your service to a Linux VPS Host. I have chosen Azure VM to demo deployment however we encourage all groups to explore multiple platforms like AWS, Oracle, Google Cloud etc. N.B. Stay away from Render as you will not be able to deploy more than one service on the free tier. Lastly we have a CI/CD pipeline that is optional according to the POE...
 
@@ -105,5 +105,73 @@ Paste the command into a command prompt and SSH:
 You should come to something like this:
 <img width="1480" height="550" alt="image" src="https://github.com/user-attachments/assets/a5c2e043-2ec5-45b7-b537-4c9e7ef8ee11" />
 
+**PLEASE NOTE THAT THIS IS JUST A GUIDE TO CREATE THE RESOURCE. YOU STILL NEED TO DEPLOY YOUR SERVICES TO THE VM**
 
+## Basic advice and requirements:
+
+Based on the transcript, here is a structured breakdown of the POE (Portfolio of Evidence) requirements and guidelines discussed by Reece Wanvig for the assessment.
+
+### 1. Video Presentation & Demonstration
+*   **Professional Video:** Create a professional, engaging video presentation.
+*   **Live VPS Deployment:** Demonstrate the application running live on a VPS (Virtual Private Server).
+*   **System Interaction:** Show the data/stuff moving between different systems and visually demonstrate that multiple containers were created on the system.
+*   **Design Choices:** Provide detailed explanations of your technical design choices.
+*   **No "Hunting":** You must explicitly point out and demonstrate where all features are. Do not make the lecturer search for your marks. 
+
+### 2. API Testing & Authentication
+*   **Swagger UI JWT Authentication Walkthrough:** You must show a walkthrough of the authentication flow in Swagger.
+*   **Public vs. Protected Endpoints:** Demonstrate authorization by showing the difference between public and protected endpoints.
+*   **Postman Suite Execution:** Execute and show a complete Postman suite. 
+*   **Flexibility (Swagger vs. Postman):** You can demonstrate entirely in Swagger, entirely in Postman, or a mix of both. *However, you **must** include some Swagger demonstration to prove Swagger is working and the authorization is set up.* (Showing Postman in the pipeline instead of the actual app is also acceptable).
+
+### 3. Architecture & Diagrams
+*   **Technical Diagram:** Provide a diagram of your architecture.
+*   **Hardware Inclusion:** The hardware must be included in the diagram (e.g., if you are using a Raspberry Pi or AWS, it must be shown).
+
+### 4. CI/CD Pipeline & Deployment (Bonus Marks)
+To get the bonus marks, your pipeline must be fully automated:
+*   **GitHub Actions:** Configure a GitHub Actions workflow.
+*   **Automated Docker Build:** The pipeline must automatically build the Docker image.
+*   **Docker Hub Push:** Automatically push the versioned image to Docker Hub.
+*   **Automated Deployment:** The pipeline must automatically SSH into the live VPS host and execute `docker-compose pull && docker-compose up -d` on commit.
+
+### 💡 Lecturer's Advice for the Group
+*   **Start early.** Since this is group work, finish it early so you don't have to fight with group members at the last minute. 
+*   **Make it obvious.** If you built it, show it. Don't assume the marker knows where to look.
+
+## Deployment
+Keep in mind that you guys are using docker and docker hub
+
+# Deployment Architecture & CI/CD Overview
+
+This project uses an automated CI/CD pipeline to containerize and deploy our C# HTTP trigger Azure Function onto an Azure Virtual Machine via Docker Hub.
+
+## High-Level Workflow
+
+1. **Code Push:** Changes pushed to the `main` branch trigger a GitHub Actions workflow.
+2. **Build & Push:** GitHub Actions builds the Docker image and pushes the latest version to Docker Hub.
+3. **Automated Deployment:** The workflow securely connects to the Azure VM via SSH, pulls the updated container image, and restarts the service.
+
+## Required Repository Secrets
+
+To secure the pipeline, the following secrets must be configured in GitHub (**Settings > Secrets and variables > Actions**):
+- `DOCKER_USERNAME` & `DOCKER_PASSWORD` (Docker Hub credentials)
+- `VM_HOST` (Azure VM Public IP)
+- `VM_USERNAME` (VM SSH user)
+- `VM_SSH_KEY` (Private SSH key content)
+
+**AS MUCH AS I WANT TOO I CANNOT GIVE AWAY TOO MUCH BECUASE IT'S SUPPOSED TO BE ADDITIONAL RESEARCH. IT'S NOT TOO DIFFICULT I PROMISE**
+
+## Checklist based on the rubric and some additional expectations
+
+1. Once again the pipeline is a requirement to ensure you guys have a bit of a safety net. Based on the **rubric you need to do the following**: Complete automated CI/CD pipeline building, pushing versioned Docker Hub images, SSHing into the live VPS host, and executing `docker-compose pull && docker-compose up -d` automatically on commit. The next sentences explain how to enhance it. The pipeline should build your API and/or serverless functions docker image and create a test network (you can do pipelines for both individually as in one for the API and one for the serverless functions from parts 1 and 2 and of course your table storage from part 3), do a healthcheck for your services and execute a combination of unit tests as well as run your postman collection tests with newman. You must have logging in the pipeline and of course clean up docker resources when you're done. Lastly if all tests pass and there are changes, said changes should be deployed to your hosted service on whichever platform it may be. The benefit of doing this is you prove to your marker that all tests work right out of the gate with the green tick.
+2. This is an end to end system meaning parts 1 to 3 must work together. Only admins and staff should be able to interact with staff documents, add menu items, change an orders status etc. If it has to do with making an order it can be AllowAnonymous as customers/students do not need to register. Only an admin should be able to register a staff member.
+3. When coding up the solution please use a **DTO ARCHITECTURE**.
+4. When making the video preferably keep it between 15 and 20 minutes long. In the video you must touch on each point in the rubric to be awarded high marks.
+5. This comes directly from the rubric: Engaging, professional video demonstrating the live VPS deployment, demonstrating JWT auth flows in Swagger UI, showing public vs protected endpoint authorization, and detailing technical design choices.
+6. For your video you should start with your deployment. Show the platform, the URL etc. If you have a pipeline come to GitHub and talk about your pipeline ensuring you speak about how it shows all tests pass from your postman collection, updates docker hub and the deployed instance (don't spend too long here). Next show the deployed instance working on postman by running your collection using the hosts IP. Next have a section to do it all using swagger. Just demo the part 3 requirements on swagger. Have a section where you talk about JWT, preferably before demoing part 3 feature requirements in action. Mention your encryption algorithm for your passwords. Show RBAC in the video as well by showing a user not having access to an endpoint.
+7. The readme: follow the requirements of the rubric, avoid huge walls of text as we are looking for good formatting, explanations etc. Explain part 3 by documenting JWT and RBAC as well as encryption in some detail. Document your deployment process and speak on what platform you chose and why. **Provide the URL**. Document your pipeline, tests and CI/CD pipeline.
+8. We want a changelog and clear headings showing part 3 additions, a youtube link, a live deployment URL and a table of contents.
+
+BEST OF LUCK!!
 
