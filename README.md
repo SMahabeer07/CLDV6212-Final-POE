@@ -146,11 +146,15 @@ Keep in mind that you guys are using docker and docker hub
 
 This project uses an automated CI/CD pipeline to containerize and deploy our C# HTTP trigger Azure Function onto an Azure Virtual Machine via Docker Hub.
 
-## High-Level Workflow
-
-1. **Code Push:** Changes pushed to the `main` branch trigger a GitHub Actions workflow.
-2. **Build & Push:** GitHub Actions builds the Docker image and pushes the latest version to Docker Hub.
-3. **Automated Deployment:** The workflow securely connects to the Azure VM via SSH, pulls the updated container image, and restarts the service.
+1. Create an Azure Linux VM and configure SSH access and the necessary inbound ports.
+2. Install Docker and Docker Compose on the VM.
+3. Prepare the deployment folder and place the docker-compose.yml file on the VM.
+4. Configure GitHub Secrets for Docker Hub credentials and VM SSH access.
+5. Deploy the application by pulling the Docker images and starting the containers:
+   docker-compose pull
+   docker-compose up -d
+6. Verify the deployment by checking running containers and accessing the application through its public IP.
+Expected outcome: A working application deployed to the VM, with GitHub Actions automating the build, image publishing and deployment process.
 
 ## Required Repository Secrets
 
@@ -172,6 +176,264 @@ To secure the pipeline, the following secrets must be configured in GitHub (**Se
 6. For your video you should start with your deployment. Show the platform, the URL etc. If you have a pipeline come to GitHub and talk about your pipeline ensuring you speak about how it shows all tests pass from your postman collection, updates docker hub and the deployed instance (don't spend too long here). Next show the deployed instance working on postman by running your collection using the hosts IP. Next have a section to do it all using swagger. Just demo the part 3 requirements on swagger. Have a section where you talk about JWT, preferably before demoing part 3 feature requirements in action. Mention your encryption algorithm for your passwords. Show RBAC in the video as well by showing a user not having access to an endpoint.
 7. The readme: follow the requirements of the rubric, avoid huge walls of text as we are looking for good formatting, explanations etc. Explain part 3 by documenting JWT and RBAC as well as encryption in some detail. Document your deployment process and speak on what platform you chose and why. **Provide the URL**. Document your pipeline, tests and CI/CD pipeline.
 8. We want a changelog and clear headings showing part 3 additions, a youtube link, a live deployment URL and a table of contents.
+
+A skeleton for you guys:
+````
+
+# =====================================================
+# CLDV6212 - CI/CD PIPELINE
+# =====================================================
+#
+# TODO:
+# Configure this pipeline to:
+# 1. Build the ASP.NET Core API.
+# 2. Build the Azure Functions application.
+# 3. Execute unit tests.
+# 4. Build and start Docker containers.
+# 5. Start Azurite for integration testing.
+# 6. Execute health checks.
+# 7. Run Postman tests using Newman.
+# 8. Publish versioned images to Docker Hub.
+# 9. SSH into the Linux VPS.
+# 10. Deploy using Docker Compose.
+#
+# =====================================================
+
+name: POE CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+env:
+  # TODO: Configure your Docker Hub image names
+  API_IMAGE: YOUR_USERNAME/YOUR_API_IMAGE
+  FUNCTIONS_IMAGE: YOUR_USERNAME/YOUR_FUNCTIONS_IMAGE
+
+jobs:
+
+  # ===================================================
+  # JOB 1: BUILD AND UNIT TEST
+  # ===================================================
+
+  build-and-test:
+
+    name: Build and Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Step 1: Checkout repository
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # Step 2: Configure .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # Step 3: Restore NuGet packages
+      - name: Restore dependencies
+        run: |
+          # TODO: Restore your solution
+          dotnet restore YOUR_SOLUTION.sln
+
+      # Step 4: Build applications
+      - name: Build solution
+        run: |
+          # TODO: Build your solution
+          dotnet build YOUR_SOLUTION.sln \
+            --configuration Release \
+            --no-restore
+
+      # Step 5: Execute unit tests
+      - name: Run unit tests
+        run: |
+          # TODO: Execute your test projects
+          dotnet test YOUR_SOLUTION.sln \
+            --configuration Release \
+            --no-build
+
+
+  # ===================================================
+  # JOB 2: INTEGRATION TESTING
+  # ===================================================
+
+  integration-tests:
+
+    name: Docker Integration Tests
+    runs-on: ubuntu-latest
+
+    needs: build-and-test
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 1: Validate Docker Compose
+      - name: Validate Compose configuration
+        run: |
+          docker compose config
+
+      # Step 2: Build Docker images
+      - name: Build API and Functions images
+        run: |
+          # TODO: Build both application services
+          docker compose build
+
+      # Step 3: Start test environment
+      - name: Start containers
+        run: |
+          # TODO: Start API, Functions and Azurite
+          docker compose up -d
+
+      # Step 4: Health checks
+      - name: Check service health
+        run: |
+          # TODO:
+          # Check API health endpoint
+          # Check Functions availability
+          # Check Azurite Table Storage
+
+          echo "Implement health checks here"
+
+      # Step 5: Configure Node.js for Newman
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Step 6: Install Newman
+      - name: Install Newman
+        run: |
+          npm install -g newman
+
+      # Step 7: Execute Postman tests
+      - name: Run Postman collection
+        run: |
+          # TODO: Update paths and environment variables
+          newman run YOUR_POSTMAN_COLLECTION.json
+
+      # Step 8: Collect logs
+      - name: Collect Docker logs
+        if: always()
+        run: |
+          docker compose logs --no-color || true
+
+      # Step 9: Cleanup
+      - name: Cleanup containers and networks
+        if: always()
+        run: |
+          # TODO: Clean up temporary test resources
+          docker compose down --volumes --remove-orphans
+
+
+  # ===================================================
+  # JOB 3: PUBLISH DOCKER IMAGES
+  # ===================================================
+
+  publish-images:
+
+    name: Publish Docker Images
+    runs-on: ubuntu-latest
+
+    needs: integration-tests
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 1: Authenticate with Docker Hub
+      - name: Docker Hub login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Step 2: Build and tag API image
+      - name: Build API image
+        run: |
+          # TODO: Build and tag API image
+          # Include a unique version tag
+          # Consider using github.sha
+
+          echo "Build API image here"
+
+      # Step 3: Build and tag Functions image
+      - name: Build Functions image
+        run: |
+          # TODO: Build and tag Functions image
+
+          echo "Build Functions image here"
+
+      # Step 4: Push images to Docker Hub
+      - name: Push images
+        run: |
+          # TODO: Push both images
+          # Push versioned tags
+          # Consider maintaining a latest tag
+
+          echo "Push Docker images here"
+
+
+  # ===================================================
+  # JOB 4: DEPLOY TO LINUX VPS
+  # ===================================================
+
+  deploy:
+
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    needs: publish-images
+
+    steps:
+
+      # Step 1: Connect to VPS
+      - name: SSH Deployment
+        uses: appleboy/ssh-action@v1.2.0
+
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+
+          script: |
+
+            # TODO: Navigate to deployment directory
+            cd YOUR_DEPLOYMENT_DIRECTORY
+
+            # TODO: Pull updated Docker images
+            docker-compose pull
+
+            # TODO: Restart application containers
+            docker-compose up -d
+
+            # TODO: Verify deployment
+            docker ps
+
+      # Step 2: Deployment confirmation
+      - name: Deployment status
+        run: |
+          echo "Deployment process completed"
+
+````
+
+9. GitHub Secrets checklist
+
+GitHub Repository → Settings → Secrets and variables → Actions → New repository secret
+
+DOCKER_USERNAME -	Docker Hub account username -	Docker Hub
+DOCKER_PASSWORD -	Docker Hub access token -	Docker Hub account settings
+VM_HOST -	Public IP address of Linux VPS	- Azure VM Overview
+VM_USERNAME - 	Linux VM login username - 	VM creation
+VM_SSH_KEY -	Private SSH key contents -	SSH key pair generated during VM creation
 
 BEST OF LUCK!!
 
